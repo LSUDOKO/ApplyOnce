@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8" />
+<title>ApplyOnce — where webcmd runs</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+         background:#0d1117; color:#e6edf3; width:1280px; min-height:720px; padding:52px 64px 40px; }
+  .eyebrow { font-size:15px; letter-spacing:.16em; text-transform:uppercase; color:#7d8590; font-weight:600; }
+  h1 { font-size:46px; font-weight:700; margin:8px 0 2px; letter-spacing:-.02em; }
+  .sub { font-size:19px; color:#8b949e; margin-bottom:32px; }
+
+  .flow { display:flex; align-items:stretch; gap:14px; margin-bottom:30px; }
+  .node { flex:1; background:#161b22; border:1px solid #21262d; border-radius:10px;
+          padding:18px 20px; display:flex; flex-direction:column; justify-content:center; }
+  .node.hl { border-color:#2ea472; background:#0f2f22; }
+  .node .t { font-size:18px; font-weight:700; }
+  .node .d { font-size:13.5px; color:#8b949e; margin-top:5px; line-height:1.45; }
+  .arrow { align-self:center; color:#484f58; font-size:26px; font-weight:700; }
+
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:26px; }
+  .card { background:#161b22; border:1px solid #21262d; border-radius:10px; padding:20px 24px; }
+  .card h2 { font-size:20px; margin-bottom:4px; display:flex; align-items:center; gap:9px; }
+  .pill { font-size:11.5px; padding:3px 9px; border-radius:20px; font-weight:700;
+          letter-spacing:.05em; text-transform:uppercase; }
+  .pill.local { background:#1f6feb33; color:#6aa9ff; border:1px solid #1f6feb66; }
+  .pill.cloud { background:#8957e533; color:#c297ff; border:1px solid #8957e566; }
+  .card .who { font-size:13px; color:#7d8590; margin-bottom:13px; }
+  .card ul { list-style:none; }
+  .card li { font-size:14.5px; padding:6px 0 6px 22px; position:relative; color:#c9d1d9; line-height:1.4; }
+  .card li:before { content:"▸"; position:absolute; left:2px; color:#3fb950; font-weight:700; }
+  .card li.no:before { content:"✕"; color:#f85149; }
+  .card code { background:#0d1117; padding:1.5px 6px; border-radius:4px;
+               font-size:13px; color:#79c0ff; border:1px solid #21262d; }
+
+  .why { background:#0f2f22; border:1px solid #1f6b4a; border-radius:10px; padding:18px 24px; }
+  .why b { color:#3fb950; }
+  .why p { font-size:15.5px; color:#b9c4cf; line-height:1.55; }
+  footer { margin-top:22px; font-size:13px; color:#6e7681; border-top:1px solid #21262d; padding-top:12px; }
+</style></head>
+<body>
+  <div class="eyebrow">ApplyOnce · webcmd hackathon</div>
+  <h1>Where webcmd runs</h1>
+  <p class="sub">Two deployments, two webcmd surfaces — neither reimplements it.</p>
+
+  <div class="flow">
+    <div class="node"><div class="t">Claude</div><div class="d">Desktop, Code, or claude.ai</div></div>
+    <div class="arrow">→</div>
+    <div class="node"><div class="t">ApplyOnce MCP</div><div class="d">5 tools · safety gates</div></div>
+    <div class="arrow">→</div>
+    <div class="node hl"><div class="t">webcmd</div><div class="d">compiled commands · browserless fetch</div></div>
+    <div class="arrow">→</div>
+    <div class="node"><div class="t">Portal</div><div class="d">Internshala · scholarships</div></div>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>Local server <span class="pill local">stdio</span></h2>
+      <div class="who">webcmd's full stack — browser included</div>
+      <ul>
+        <li>6 adapters registered via <code>cli()</code></li>
+        <li>Discoverable in <code>webcmd list -f json</code></li>
+        <li>Drives <code>IPage</code>: <code>fillText</code>, <code>uploadFiles</code></li>
+        <li><b>Learn-once: 35 steps → 1</b></li>
+        <li>Fills applications — stops before submit</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Remote server <span class="pill cloud">HTTP + OAuth</span></h2>
+      <div class="who">webcmd's browserless tier — runs on any cloud host</div>
+      <ul>
+        <li>Imports <code>web/fetch</code> in-process</li>
+        <li>Tier escalation → real browser fingerprint</li>
+        <li>SSRF-safe proxy · readability extraction</li>
+        <li>Connects to claude.ai via OAuth 2.1</li>
+        <li class="no">No filling — needs your browser</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="why">
+    <p><b>Why <code style="background:#0d1117;padding:1px 6px;border-radius:4px;color:#79c0ff">web/fetch</code> works in the cloud —</b>
+    webcmd's own manifest declares it <code style="background:#0d1117;padding:1px 6px;border-radius:4px;color:#79c0ff">"browser": false, "clientOwned": true</code>,
+    so the remote server calls the same <code style="background:#0d1117;padding:1px 6px;border-radius:4px;color:#79c0ff">func()</code> the CLI runs — minus the process spawn.</p>
+  </div>
+
+  <footer>Every eligibility response returns <code>fetched_via: "webcmd web/fetch (tier: plain)"</code> — the dependency is verifiable, not claimed.</footer>
+</body></html>

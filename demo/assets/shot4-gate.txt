@@ -1,0 +1,41 @@
+16:39:47 [tool.start] ApplyOnce MCP server v0.1.0 ready on stdio {"tools":["find_opportunities","check_eligibility","fill_application","list_learned_portals","track_deadlines"]}
+16:39:47 [tool.start] MCP tool called: fill_application {"tool":"fill_application"}
+16:39:47 [profile.loaded] Loaded profile sample-student-001 from disk (local only) {"profile_id":"sample-student-001","name":"Arpit Kumar Sharma","qualifications":3,"documents":8}
+16:39:48 [reuse.hit] Compiled command found for scholarship: EXECUTING INSTANTLY (no exploration) {"portal":"scholarship","mode":"reuse"}
+16:39:52 [mapping.result] Mapped 27/28 form fields from the profile {"portal":"scholarship","mapped":27,"unmapped":1}
+16:40:01 [tool.end] reuse run finished in 13.6s across 3 steps {"portal":"scholarship","steps":3,"ms":13634}
+
+╔═════════════════════════════════════════════════════════════════╗
+║  ⚡ LEARN-ONCE ADVANTAGE                                         ║
+╟═════════════════════════════════════════════════════════════════╢
+║  Portal: scholarship                                            ║
+║                                                                 ║
+║  RUN 1  (LEARN)   explored the portal, authored a command       ║
+║     steps :   36   time : 29.5s                                 ║
+║                                                                 ║
+║  RUN 2  (REUSE)   executed the compiled command directly        ║
+║     steps :    3   time : 13.6s                                 ║
+║                                                                 ║
+║  SAVED  : 33 steps (92%)  •  15.9s (54%)                        ║
+║  Run 2 performed NO exploration and NO reasoning about layout.  ║
+╚═════════════════════════════════════════════════════════════════╝
+
+16:40:01 [reuse.hit] Learn-once comparison {"portal":"scholarship","first_run":{"steps":36,"ms":29535},"second_run":{"steps":3,"ms":13634},"saved_steps":33,"saved_ms":15901,"saved_pct":54}
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║  ⛔ HUMAN APPROVAL REQUIRED — NOT SUBMITTED                                 ║
+╟════════════════════════════════════════════════════════════════════════════╢
+║  Portal            : scholarship                                           ║
+║  Opportunity       : http://localhost:4173/apply/sch-medhavi-2026          ║
+║  Fields filled     : 21                                                    ║
+║  Unmapped fields   : 1                                                     ║
+║  Missing documents : 0                                                     ║
+║                                                                            ║
+║  ApplyOnce filled this application up to the final submit                  ║
+║  button and STOPPED. No submit or payment action was taken.                ║
+║                                                                            ║
+║  Review and submit yourself: http://localhost:4173/apply/sch-medhavi-2026  ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+16:40:01 [gate.approval_required] Stopped before submit — awaiting human approval {"portal":"scholarship","opportunity_id":"http://localhost:4173/apply/sch-medhavi-2026","submitted":false}
+16:40:01 [tool.end] fill_application completed in 14196ms {"tool":"fill_application"}

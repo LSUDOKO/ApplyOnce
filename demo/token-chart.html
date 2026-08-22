@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8" />
+<title>ApplyOnce — token cost with vs without webcmd</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: #0d1117; color: #e6edf3;
+    width: 1280px; min-height: 720px; padding: 52px 64px 40px;
+    display: flex; flex-direction: column;
+  }
+  .eyebrow { font-size: 15px; letter-spacing: .16em; text-transform: uppercase;
+             color: #7d8590; font-weight: 600; }
+  h1 { font-size: 46px; font-weight: 700; margin: 8px 0 2px; letter-spacing: -.02em; }
+  .sub { font-size: 19px; color: #8b949e; margin-bottom: 34px; }
+  .sub b { color: #e6edf3; font-weight: 600; }
+
+  .bars { display: flex; flex-direction: column; gap: 26px; margin-bottom: 28px; }
+  .row { display: grid; grid-template-columns: 190px 1fr 132px; align-items: center; gap: 20px; }
+  .label { font-size: 17px; font-weight: 600; text-align: right; line-height: 1.25; }
+  .label small { display:block; font-size: 12.5px; color: #7d8590; font-weight: 500; margin-top: 3px; }
+  .track { background: #161b22; border-radius: 8px; height: 76px;
+           border: 1px solid #21262d; overflow: hidden; }
+  .fill { height: 100%; display: flex; align-items: center; padding-left: 26px;
+          font-size: 26px; font-weight: 700; color: #fff; border-radius: 7px; }
+  .without .fill { width: 100%;  background: linear-gradient(90deg,#8b2c2c,#c4443c); }
+  .with    .fill { width: 27.9%; background: linear-gradient(90deg,#1a6b4a,#2ea472); }
+  .value { font-size: 15px; color: #8b949e; font-weight: 600; }
+  .value b { display:block; font-size: 21px; color: #e6edf3; }
+
+  .saved { background: #0f2f22; border: 1px solid #1f6b4a; border-radius: 10px;
+           padding: 22px 28px; display: flex; align-items: center; gap: 34px; margin-bottom: 26px; }
+  .saved .big { font-size: 52px; font-weight: 800; color: #3fb950; letter-spacing: -.02em; }
+  .saved .txt { font-size: 18px; color: #b9c4cf; line-height: 1.45; }
+  .saved .txt b { color: #e6edf3; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .stat { background: #161b22; border: 1px solid #21262d; border-radius: 9px; padding: 18px 22px; }
+  .stat .k { font-size: 12.5px; color: #7d8590; text-transform: uppercase;
+             letter-spacing: .1em; font-weight: 600; }
+  .stat .v { font-size: 28px; font-weight: 700; margin-top: 5px; }
+  .stat .v span { font-size: 15px; color: #7d8590; font-weight: 500; }
+  .down { color: #3fb950; }
+
+  footer { margin-top: auto; font-size: 13.5px; color: #6e7681; line-height: 1.55;
+           border-top: 1px solid #21262d; padding-top: 12px; }
+  footer b { color: #8b949e; }
+</style></head>
+<body>
+  <div class="eyebrow">ApplyOnce · webcmd hackathon</div>
+  <h1>What an agent pays to fill one form</h1>
+  <p class="sub">Measured on a real 28-field application — <b>tokens the model must read to navigate</b>, not an estimate.</p>
+
+  <div class="bars">
+    <div class="row without">
+      <div class="label">Without webcmd<small>agent explores the form</small></div>
+      <div class="track"><div class="fill">≈ 5,538 tokens</div></div>
+      <div class="value"><b>35</b>browser steps</div>
+    </div>
+    <div class="row with">
+      <div class="label">With webcmd<small>compiled command</small></div>
+      <div class="track"><div class="fill">≈ 1,545</div></div>
+      <div class="value"><b>1</b>browser step</div>
+    </div>
+  </div>
+
+  <div class="saved">
+    <div class="big">−72%</div>
+    <div class="txt"><b>3,993 tokens saved on every single run.</b><br />
+      The first run learns the portal once. Every run after it reasons about nothing.</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="k">Browser steps</div>
+      <div class="v">35 → 1 <span class="down">−97%</span></div></div>
+    <div class="stat"><div class="k">Wall time</div>
+      <div class="v">32.2s → 4.0s <span class="down">−88%</span></div></div>
+    <div class="stat"><div class="k">Layout reasoning</div>
+      <div class="v">Yes → <span class="down">None</span></div></div>
+  </div>
+
+  <footer>
+    <b>Method:</b> every browser round-trip returns an observation the model must read before choosing its next action.
+    This counts the real bytes returned in each mode (~4 chars/token). System prompt and task text are identical in both
+    modes and excluded, so this measures navigation cost — exactly what webcmd removes.
+    <b>Reproduce:</b> <code>node scripts/measure-token-cost.mjs &lt;session&gt; &lt;form-url&gt;</code>
+  </footer>
+</body></html>

@@ -1,0 +1,56 @@
+
+=== LEARN MODE (no compiled command — the agent must explore) ===
+  step  1: open the unknown page                  +   557 chars
+  step  2: count the form controls                +   507 chars
+  step  3: inspect control 1/28                   +   650 chars
+  step  4: inspect control 2/28                   +   646 chars
+  step  5: inspect control 3/28                   +   662 chars
+  step  6: inspect control 4/28                   +   654 chars
+  step  7: inspect control 5/28                   +   639 chars
+  step  8: inspect control 6/28                   +   644 chars
+  step  9: inspect control 7/28                   +   643 chars
+  step 10: inspect control 8/28                   +   646 chars
+  step 11: read options of <select #gender>       +   566 chars
+  step 12: inspect control 9/28                   +   650 chars
+  step 13: read options of <select #category>     +   584 chars
+  step 14: inspect control 10/28                  +   650 chars
+  step 15: inspect control 11/28                  +   643 chars
+  step 16: read options of <select #state>        +   600 chars
+  step 17: inspect control 12/28                  +   652 chars
+  step 18: read options of <select #district>     +   536 chars
+  step 19: inspect control 13/28                  +   642 chars
+  step 20: inspect control 14/28                  +   641 chars
+  step 21: inspect control 15/28                  +   637 chars
+  step 22: inspect control 16/28                  +   637 chars
+  step 23: inspect control 17/28                  +   651 chars
+  step 24: inspect control 18/28                  +   645 chars
+  step 25: inspect control 19/28                  +   658 chars
+  step 26: inspect control 20/28                  +   662 chars
+  step 27: inspect control 21/28                  +   667 chars
+  step 28: inspect control 22/28                  +   651 chars
+  step 29: inspect control 23/28                  +   650 chars
+  step 30: inspect control 24/28                  +   666 chars
+  step 31: inspect control 25/28                  +   680 chars
+  step 32: inspect control 26/28                  +   664 chars
+  step 33: inspect control 27/28                  +   675 chars
+  step 34: inspect control 28/28                  +   660 chars
+  step 35: locate the submit control              +   535 chars
+
+=== REUSE MODE (compiled webcmd command) ===
+  step  1: webcmd scholarship fill --dry-run        +  6179 chars
+
+╔══════════════════════════════════════════════════════════════╗
+║  TOKEN COST: exploring vs a compiled webcmd command          ║
+╟══════════════════════════════════════════════════════════════╢
+║  Portal: scholarship                                         ║
+║                                                              ║
+║  WITHOUT webcmd (agent explores the form)                    ║
+║    steps:   35   observations:   22150 chars  ≈   5538 tokens║
+║                                                              ║
+║  WITH webcmd (compiled command)                              ║
+║    steps:    1   observations:    6179 chars  ≈   1545 tokens║
+║                                                              ║
+║  SAVED:   3993 tokens (72%)   •   34 steps (97%)             ║
+╚══════════════════════════════════════════════════════════════╝
+
+Report written to /home/arpit/Desktop/hackathon_projects/ApplyOnce/data/runs/token-cost.json
