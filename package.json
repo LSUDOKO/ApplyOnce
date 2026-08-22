@@ -1,0 +1,79 @@
+{
+  "name": "applyonce",
+  "version": "0.0.0-development",
+  "description": "A self-learning MCP agent that fills student scholarship, internship and job applications from one stored profile — and never submits without human approval.",
+  "type": "module",
+  "main": "dist/mcp/server.js",
+  "bin": {
+    "applyonce-mcp": "dist/mcp/server.js"
+  },
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "files": [
+    "dist/",
+    "schemas/",
+    "plugins/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/mcp/server.ts",
+    "start": "node dist/mcp/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --ext .ts",
+    "adapters:install": "webcmd plugin install ./plugins/applyonce",
+    "adapters:list": "webcmd list -f json",
+    "doctor": "webcmd doctor",
+    "prepare": "node -e \"process.exit(0)\""
+  },
+  "keywords": [
+    "mcp",
+    "webcmd",
+    "automation",
+    "scholarship",
+    "internship",
+    "students",
+    "india",
+    "browser-automation",
+    "self-healing"
+  ],
+  "author": "LSUDOKO",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LSUDOKO/ApplyOnce.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LSUDOKO/ApplyOnce/issues"
+  },
+  "homepage": "https://github.com/LSUDOKO/ApplyOnce#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.11"
+  },
+  "peerDependencies": {
+    "@agentrhq/webcmd": ">=0.7.0"
+  },
+  "peerDependenciesMeta": {
+    "@agentrhq/webcmd": {
+      "optional": false
+    }
+  }
+}

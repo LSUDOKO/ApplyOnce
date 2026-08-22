@@ -1,0 +1,191 @@
+{
+  "schema_version": "1.0.0",
+  "profile_id": "sample-student-001",
+  "personal": {
+    "name": {
+      "full": "Arpit Kumar Sharma",
+      "first": "Arpit",
+      "middle": "Kumar",
+      "last": "Sharma",
+      "as_per_aadhaar": "ARPIT KUMAR SHARMA",
+      "as_per_marksheet": "Arpit Kumar Sharma",
+      "father_name": "Rajesh Kumar Sharma",
+      "mother_name": "Sunita Sharma"
+    },
+    "dob": "2004-07-15",
+    "gender": "male",
+    "category": "obc",
+    "differently_abled": false,
+    "nationality": "Indian",
+    "marital_status": "single",
+    "email": "adoranto737@gmail.com",
+    "phone": "9876543210",
+    "address": {
+      "line1": "House No. 42, Shanti Nagar",
+      "line2": "Near Civil Lines",
+      "city": "Jaipur",
+      "district": "Jaipur",
+      "state": "Rajasthan",
+      "pincode": "302006",
+      "country": "India"
+    }
+  },
+  "academic": {
+    "qualifications": [
+      {
+        "level": "10th",
+        "board_or_university": "Central Board of Secondary Education",
+        "institution": "Kendriya Vidyalaya No. 1, Jaipur",
+        "year_of_passing": 2020,
+        "score_type": "percentage",
+        "score": 91.4,
+        "score_max": 100,
+        "roll_number": "10234567",
+        "currently_enrolled": false,
+        "start_year": 2019
+      },
+      {
+        "level": "12th",
+        "board_or_university": "Central Board of Secondary Education",
+        "institution": "Kendriya Vidyalaya No. 1, Jaipur",
+        "stream": "Science (PCM)",
+        "year_of_passing": 2022,
+        "score_type": "percentage",
+        "score": 88.6,
+        "score_max": 100,
+        "roll_number": "12987654",
+        "currently_enrolled": false,
+        "start_year": 2020
+      },
+      {
+        "level": "undergraduate",
+        "board_or_university": "Rajasthan Technical University",
+        "institution": "Swami Keshvanand Institute of Technology",
+        "stream": "Computer Science and Engineering",
+        "degree": "B.Tech",
+        "year_of_passing": 2026,
+        "score_type": "cgpa",
+        "score": 8.7,
+        "score_max": 10,
+        "roll_number": "22ESKCS042",
+        "currently_enrolled": true,
+        "start_year": 2022
+      }
+    ],
+    "current_year_of_study": 4,
+    "expected_graduation_year": 2026,
+    "backlogs": 0,
+    "gap_years": 0
+  },
+  "family": {
+    "annual_income": 240000,
+    "income_certificate_number": "RJ/INC/2025/884213",
+    "occupation_father": "Shopkeeper",
+    "occupation_mother": "Homemaker"
+  },
+  "skills": [
+    "Python",
+    "JavaScript",
+    "TypeScript",
+    "React",
+    "Node.js",
+    "SQL",
+    "Git",
+    "Docker",
+    "Machine Learning",
+    "Data Structures"
+  ],
+  "experience": [
+    {
+      "title": "Web Development Intern",
+      "organization": "TechNova Solutions Pvt Ltd",
+      "start_date": "2025-05",
+      "end_date": "2025-07",
+      "description": "Built internal dashboards in React and Node.js; automated weekly reporting, cutting manual effort by 6 hours per week."
+    }
+  ],
+  "links": {
+    "portfolio": "https://arpitsharma.dev",
+    "github": "https://github.com/LSUDOKO",
+    "linkedin": "https://www.linkedin.com/in/arpit-sharma-sample"
+  },
+  "bank": {
+    "account_holder_name": "Arpit Kumar Sharma",
+    "account_number": "34567890123",
+    "ifsc": "SBIN0031234",
+    "bank_name": "State Bank of India",
+    "branch": "Civil Lines, Jaipur",
+    "aadhaar_seeded": true
+  },
+  "identifiers": {
+    "aadhaar_number": "123456789012",
+    "pan": "ABCDE1234F",
+    "abc_id": "123456789012"
+  },
+  "documents": {
+    "resume": {
+      "path": "/home/arpit/Documents/applyonce/resume.pdf",
+      "label": "Resume",
+      "mime": "application/pdf"
+    },
+    "photo": {
+      "path": "/home/arpit/Documents/applyonce/photo.jpg",
+      "label": "Passport Photo",
+      "mime": "image/jpeg"
+    },
+    "signature": {
+      "path": "/home/arpit/Documents/applyonce/signature.jpg",
+      "label": "Signature",
+      "mime": "image/jpeg"
+    },
+    "marksheet_10th": {
+      "path": "/home/arpit/Documents/applyonce/marksheet_10th.pdf",
+      "label": "10th Marksheet",
+      "mime": "application/pdf"
+    },
+    "marksheet_12th": {
+      "path": "/home/arpit/Documents/applyonce/marksheet_12th.pdf",
+      "label": "12th Marksheet",
+      "mime": "application/pdf"
+    },
+    "income_certificate": {
+      "path": "/home/arpit/Documents/applyonce/income_certificate.pdf",
+      "label": "Income Certificate",
+      "mime": "application/pdf"
+    },
+    "caste_certificate": {
+      "path": "/home/arpit/Documents/applyonce/caste_certificate.pdf",
+      "label": "Caste Certificate",
+      "mime": "application/pdf"
+    },
+    "other": []
+  },
+  "long_answers": {
+    "why_this_role": "I have spent the last two years building production-grade web applications, and this role sits exactly where my strengths meet my curiosity. I want to work on systems that real users depend on, and I learn fastest when shipping alongside engineers who care about craft.",
+    "career_goal": "To become a full-stack engineer specialising in developer tooling and AI-assisted automation, and eventually to build products that reduce repetitive work for students and small businesses in India.",
+    "why_deserve_scholarship": "I am the first person in my family to attend an engineering college. My father runs a small shop and our household income is well under the scheme ceiling. I have maintained an 8.7 CGPA while taking on paid internship work to reduce the burden on my family. This scholarship would let me focus on my final-year project instead of part-time work.",
+    "cover_letter": "I am a final-year Computer Science student at Rajasthan Technical University with hands-on experience building React and Node.js applications during a summer internship at TechNova Solutions. I am comfortable owning a feature end to end, from schema design to deployment, and I am looking for a team where I can keep learning quickly.",
+    "availability": "Available to join immediately for a 6-month full-time internship; open to remote or Bengaluru/Jaipur onsite."
+  },
+  "preferences": {
+    "job_titles": [
+      "Software Engineering Intern",
+      "Full Stack Developer Intern",
+      "Backend Intern",
+      "Web Development Intern"
+    ],
+    "locations": [
+      "Remote",
+      "Bengaluru",
+      "Jaipur",
+      "Pune"
+    ],
+    "work_mode": [
+      "remote",
+      "hybrid"
+    ],
+    "min_stipend": 10000,
+    "available_from": "2026-09-01",
+    "duration_months": 6
+  }
+}

@@ -1,0 +1,533 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://applyonce.dev/schemas/profile.schema.json",
+  "title": "ApplyOnce Student Profile",
+  "description": "Local-only structured profile for an Indian student applying to scholarships, internships and jobs. NEVER transmitted to third-party servers.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "personal",
+    "academic",
+    "documents"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "personal": {
+      "type": "object",
+      "required": [
+        "name",
+        "dob",
+        "gender",
+        "email",
+        "phone",
+        "address"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "object",
+          "description": "Indian portals disagree on name shape. Store every variant once.",
+          "required": [
+            "full"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "full": {
+              "type": "string",
+              "minLength": 1
+            },
+            "first": {
+              "type": "string"
+            },
+            "middle": {
+              "type": "string"
+            },
+            "last": {
+              "type": "string"
+            },
+            "as_per_aadhaar": {
+              "type": "string",
+              "description": "Exact spelling on Aadhaar; some scholarship portals hard-match this."
+            },
+            "as_per_marksheet": {
+              "type": "string",
+              "description": "Exact spelling on 10th/12th marksheet."
+            },
+            "father_name": {
+              "type": "string"
+            },
+            "mother_name": {
+              "type": "string"
+            }
+          }
+        },
+        "dob": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "ISO 8601. Adapters reformat per portal (DD/MM/YYYY etc)."
+        },
+        "gender": {
+          "enum": [
+            "male",
+            "female",
+            "transgender",
+            "prefer_not_to_say"
+          ]
+        },
+        "category": {
+          "enum": [
+            "general",
+            "obc",
+            "sc",
+            "st",
+            "ews",
+            "prefer_not_to_say"
+          ],
+          "description": "Reservation category used by Indian scholarship eligibility rules."
+        },
+        "differently_abled": {
+          "type": "boolean",
+          "default": false
+        },
+        "nationality": {
+          "type": "string",
+          "default": "Indian"
+        },
+        "religion": {
+          "type": "string"
+        },
+        "marital_status": {
+          "enum": [
+            "single",
+            "married",
+            "other",
+            "prefer_not_to_say"
+          ]
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "pattern": "^[0-9]{10}$",
+          "description": "10-digit Indian mobile, no country code."
+        },
+        "alternate_phone": {
+          "type": "string",
+          "pattern": "^[0-9]{10}$"
+        },
+        "address": {
+          "type": "object",
+          "required": [
+            "line1",
+            "state",
+            "district",
+            "pincode"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "line1": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line2": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            },
+            "district": {
+              "type": "string",
+              "description": "Dependent on state \u2014 drives state\u2192district cascading dropdowns."
+            },
+            "state": {
+              "type": "string"
+            },
+            "pincode": {
+              "type": "string",
+              "pattern": "^[0-9]{6}$"
+            },
+            "country": {
+              "type": "string",
+              "default": "India"
+            }
+          }
+        }
+      }
+    },
+    "academic": {
+      "type": "object",
+      "required": [
+        "qualifications"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "qualifications": {
+          "type": "array",
+          "description": "Repeater source. Portals with 'Add Qualification' iterate this array.",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "level",
+              "institution",
+              "year_of_passing"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "level": {
+                "enum": [
+                  "10th",
+                  "12th",
+                  "diploma",
+                  "undergraduate",
+                  "postgraduate",
+                  "phd"
+                ]
+              },
+              "board_or_university": {
+                "type": "string"
+              },
+              "institution": {
+                "type": "string"
+              },
+              "stream": {
+                "type": "string"
+              },
+              "degree": {
+                "type": "string"
+              },
+              "year_of_passing": {
+                "type": "integer",
+                "minimum": 1950,
+                "maximum": 2100
+              },
+              "score_type": {
+                "enum": [
+                  "percentage",
+                  "cgpa",
+                  "gpa"
+                ]
+              },
+              "score": {
+                "type": "number",
+                "minimum": 0
+              },
+              "score_max": {
+                "type": "number",
+                "minimum": 0,
+                "description": "e.g. 10 for CGPA/10, 100 for percentage."
+              },
+              "roll_number": {
+                "type": "string"
+              },
+              "currently_enrolled": {
+                "type": "boolean",
+                "default": false
+              },
+              "start_year": {
+                "type": "integer",
+                "minimum": 1950,
+                "maximum": 2100,
+                "description": "Course start/joining year \u2014 portals with a start/end year pair read this."
+              }
+            }
+          }
+        },
+        "current_year_of_study": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "expected_graduation_year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+        },
+        "backlogs": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "gap_years": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
+      }
+    },
+    "family": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "annual_income": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "INR per year. Drives income-cap eligibility on scholarship schemes."
+        },
+        "income_certificate_number": {
+          "type": "string"
+        },
+        "occupation_father": {
+          "type": "string"
+        },
+        "occupation_mother": {
+          "type": "string"
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "experience": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": [
+          "title",
+          "organization"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "organization": {
+            "type": "string"
+          },
+          "start_date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}(-\\d{2})?$"
+          },
+          "end_date": {
+            "type": "string",
+            "pattern": "^(\\d{4}-\\d{2}(-\\d{2})?|present)$"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "portfolio": {
+          "type": "string",
+          "format": "uri"
+        },
+        "github": {
+          "type": "string",
+          "format": "uri"
+        },
+        "linkedin": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "bank": {
+      "type": "object",
+      "description": "SENSITIVE. Always masked in logs and in every MCP tool response.",
+      "additionalProperties": false,
+      "properties": {
+        "account_holder_name": {
+          "type": "string"
+        },
+        "account_number": {
+          "type": "string",
+          "pattern": "^[0-9]{9,18}$"
+        },
+        "ifsc": {
+          "type": "string",
+          "pattern": "^[A-Z]{4}0[A-Z0-9]{6}$"
+        },
+        "bank_name": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "aadhaar_seeded": {
+          "type": "boolean",
+          "description": "Whether the account is Aadhaar-seeded (DBT requirement for most Indian scholarships)."
+        }
+      }
+    },
+    "identifiers": {
+      "type": "object",
+      "description": "SENSITIVE. Masked in logs. Stored locally only.",
+      "additionalProperties": false,
+      "properties": {
+        "aadhaar_number": {
+          "type": "string",
+          "pattern": "^[0-9]{12}$"
+        },
+        "pan": {
+          "type": "string",
+          "pattern": "^[A-Z]{5}[0-9]{4}[A-Z]$"
+        },
+        "abc_id": {
+          "type": "string",
+          "description": "Academic Bank of Credits ID."
+        }
+      }
+    },
+    "documents": {
+      "type": "object",
+      "description": "Absolute local file paths. Uploaded from disk; never copied off-machine.",
+      "additionalProperties": false,
+      "properties": {
+        "resume": {
+          "$ref": "#/$defs/document"
+        },
+        "photo": {
+          "$ref": "#/$defs/document"
+        },
+        "signature": {
+          "$ref": "#/$defs/document"
+        },
+        "marksheet_10th": {
+          "$ref": "#/$defs/document"
+        },
+        "marksheet_12th": {
+          "$ref": "#/$defs/document"
+        },
+        "degree_marksheet": {
+          "$ref": "#/$defs/document"
+        },
+        "income_certificate": {
+          "$ref": "#/$defs/document"
+        },
+        "caste_certificate": {
+          "$ref": "#/$defs/document"
+        },
+        "domicile_certificate": {
+          "$ref": "#/$defs/document"
+        },
+        "aadhaar_card": {
+          "$ref": "#/$defs/document"
+        },
+        "bank_passbook": {
+          "$ref": "#/$defs/document"
+        },
+        "other": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/document"
+          },
+          "default": []
+        }
+      }
+    },
+    "long_answers": {
+      "type": "object",
+      "description": "Reusable essay fields. Adapters trim to each portal's character cap.",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "properties": {
+        "why_this_role": {
+          "type": "string"
+        },
+        "career_goal": {
+          "type": "string"
+        },
+        "why_deserve_scholarship": {
+          "type": "string"
+        },
+        "cover_letter": {
+          "type": "string"
+        },
+        "availability": {
+          "type": "string"
+        }
+      }
+    },
+    "preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "job_titles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "locations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "work_mode": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "remote",
+              "hybrid",
+              "onsite"
+            ]
+          },
+          "default": []
+        },
+        "min_stipend": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "available_from": {
+          "type": "string",
+          "format": "date"
+        },
+        "duration_months": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "document": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Absolute path on the local machine."
+        },
+        "label": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "size_kb": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}
