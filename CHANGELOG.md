@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.0.1...v1.1.0) (2026-08-22)
+
+### Features
+
+* **adapters:** bring the plugin to webcmd community-plugin standard ([213e34f](https://github.com/LSUDOKO/ApplyOnce/commit/213e34f3531addd56ab98904f635c6eace8aa4fb))
+
 ## [1.0.1](https://github.com/LSUDOKO/ApplyOnce/compare/v1.0.0...v1.0.1) (2026-08-22)
 
 ### Dependencies
