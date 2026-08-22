@@ -64,13 +64,30 @@ On **first contact** with a portal there is no compiled command, so an agent mus
 
 Measured on the demo form (28 fields), not estimated:
 
-| | Run 1 (learn) | Run 2+ (reuse) | Saved |
+| | Without webcmd | With webcmd | Saved |
 |---|---|---|---|
-| What happens | Explore the portal one control at a time | Execute the compiled command | |
-| Browser steps | **36** | **3** | 92% |
-| Wall time | 29.2 s | 13.9 s | 52% |
+| What happens | Agent explores the form one control at a time | Runs the compiled command | |
+| Browser steps | **35** | **1** | **97%** |
+| Observation payload | 26,020 chars | 6,179 chars | |
+| **Tokens to read it** | **≈ 6,505** | **≈ 1,545** | **76%** |
+| Wall time | 32.2 s | 4.0 s | 88% |
 | Reasoning about layout | Yes | **None** | |
 | Survives a redesign | — | Yes, via [self-healing](#how-self-healing-works) | |
+
+Reproduce it yourself:
+
+```bash
+node fixtures/portal/server.mjs &
+webcmd session create -f json                      # note the sessionId
+node scripts/measure-token-cost.mjs <sessionId> http://localhost:4173/apply/sch-medhavi-2026
+```
+
+**What is counted:** every browser round-trip returns an observation the model
+must read before choosing its next action. Those payloads are the tokens an
+exploring agent spends on *navigation*. The script captures the real bytes
+returned in both modes and converts at ~4 chars/token. System prompt and task
+text are identical either way and excluded, so this measures navigation cost
+specifically — exactly what webcmd removes.
 
 The "before" is recorded by `scripts/record-learn-cost.mjs`, which replays a first-contact exploration and writes its real step count to a local run ledger. The banner above prints on every reuse run that has a recorded learn run to compare against — it never relabels a reuse as a learn to manufacture a saving.
 
