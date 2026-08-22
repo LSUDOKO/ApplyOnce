@@ -1,3 +1,9 @@
+## [1.2.1](https://github.com/LSUDOKO/ApplyOnce/compare/v1.2.0...v1.2.1) (2026-08-22)
+
+### Bug Fixes
+
+* **remote:** accept URL-safe tokens so Claude web Connect works ([27b9192](https://github.com/LSUDOKO/ApplyOnce/commit/27b919246b605a408928b47a560d98b0e510e1b6))
+
 ## [1.2.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.1.0...v1.2.0) (2026-08-22)
 
 ### Features
