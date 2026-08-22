@@ -316,12 +316,33 @@ app.get('/health', (_req, res) => {
   res.json({ ok: true, service: 'applyonce-remote', version: VERSION, transport: 'streamable-http' });
 });
 
+/**
+ * Normalise a token for comparison.
+ *
+ * A generated secret is often Base64, which contains `/`, `+` and `=`. Those
+ * cannot travel literally in a URL path segment, and a client that percent-
+ * encodes them ("%2F") would not match the raw secret. So we compare on a
+ * URL-SAFE canonical form: decode any percent-encoding, then fold Base64's
+ * `/`+`+` onto `_`/`-` and drop `=` padding. A user may therefore paste either
+ * the raw secret or its URL-safe variant and both authenticate.
+ */
+function canonicalToken(value: string): string {
+  let decoded = String(value ?? '');
+  try { decoded = decodeURIComponent(decoded); } catch { /* keep as-is */ }
+  return decoded.replace(/\//g, '_').replace(/\+/g, '-').replace(/=+$/, '');
+}
+
 /** Constant-time token comparison so the endpoint cannot be probed by timing. */
 function tokenValid(candidate: string): boolean {
   if (!TOKEN) return true;                    // no token configured = open (dev only)
-  const a = Buffer.from(candidate);
-  const b = Buffer.from(TOKEN);
+  const a = Buffer.from(canonicalToken(candidate));
+  const b = Buffer.from(canonicalToken(TOKEN));
   return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/** The value a user should paste into a URL. Printed at boot for convenience. */
+export function urlSafeToken(): string {
+  return canonicalToken(TOKEN);
 }
 
 /** One transport per MCP session id. */
@@ -382,4 +403,7 @@ app.listen(PORT, () => {
   process.stderr.write(`  health : GET  /health\n`);
   process.stderr.write(`  mcp    : POST /c/<token>/mcp   (or /mcp with a Bearer token)\n`);
   process.stderr.write(`  auth   : ${TOKEN ? 'token required' : 'OPEN — set APPLYONCE_TOKEN in production'}\n`);
+  if (TOKEN) {
+    process.stderr.write(`  connect: /c/${urlSafeToken()}/mcp\n`);
+  }
 });
