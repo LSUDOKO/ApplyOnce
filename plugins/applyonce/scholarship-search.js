@@ -159,19 +159,26 @@ cli({
          * needs one comparable field, so derive whichever half is missing and
          * expose a normalised ISO date alongside the raw display values.
          */
+        // Calendar dates, not instants: read LOCAL components. toISOString()
+        // would shift a local midnight back a day in IST (UTC+5:30).
+        const toLocalIso = (ts) => {
+          const d = new Date(ts);
+          const pad = (n) => String(n).padStart(2, '0');
+          return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+        };
         let deadlineIso = null;
         let daysToGo = r.days_to_go;
 
         if (r.deadline) {
           const parsed = Date.parse(r.deadline);
           if (!Number.isNaN(parsed)) {
-            deadlineIso = new Date(parsed).toISOString().slice(0, 10);
+            deadlineIso = toLocalIso(parsed);
             if (daysToGo === null) {
               daysToGo = Math.max(0, Math.round((parsed - Date.now()) / 86400000));
             }
           }
         } else if (typeof daysToGo === 'number') {
-          deadlineIso = new Date(Date.now() + daysToGo * 86400000).toISOString().slice(0, 10);
+          deadlineIso = toLocalIso(Date.now() + daysToGo * 86400000);
         }
 
         return {
