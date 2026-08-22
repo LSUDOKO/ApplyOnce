@@ -32,11 +32,6 @@ jobs:
       - name: Install
         run: npm ci
 
-      # Adapters import @agentrhq/webcmd/registry; it is a peer dep, so the
-      # check script needs it resolvable even though CI never opens a browser.
-      - name: Install webcmd peer (no browser needed for checks)
-        run: npm i --no-save @agentrhq/webcmd
-
       - name: Typecheck
         run: npm run typecheck
 

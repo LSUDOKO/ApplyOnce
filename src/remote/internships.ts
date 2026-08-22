@@ -7,6 +7,7 @@
  */
 
 import { fetchHtml } from './fetch.js';
+import { webcmdFetch } from './webcmd-fetch.js';
 import { parseInternshalaListing, parseInternshalaDetail,
   type ParsedInternship, type ParsedInternshipDetail } from './parse.js';
 import { ApplyOnceError } from '../errors.js';
@@ -47,15 +48,54 @@ export async function searchInternships(options: {
   return { rows: rows.slice(0, limit), healedAt, url };
 }
 
-export async function getInternship(url: string): Promise<ParsedInternshipDetail> {
+export interface InternshipDetailWithProse extends ParsedInternshipDetail {
+  /** Readability-extracted role description, courtesy of webcmd's web/fetch. */
+  description: string | null;
+  /** Which webcmd tier was needed: 'plain', or 'impit' if the site pushed back. */
+  fetch_tier: string | null;
+}
+
+/**
+ * Read one internship using BOTH paths, because each is better at a different job:
+ *
+ *   • raw HTML  -> structured fields that live in markup (stipend chip, the
+ *                  APPLY BY heading/body pair, skill tabs, the company anchor)
+ *   • webcmd    -> the role prose, readability-extracted with navigation,
+ *                  ads and boilerplate stripped. That text is what eligibility
+ *                  reasoning actually reads, and webcmd does it far better than
+ *                  a regex over raw markup would.
+ *
+ * webcmd also reports the TIER it needed. `impit` means a plain request was
+ * refused and webcmd escalated to a real browser fingerprint — signal we
+ * surface rather than hide.
+ */
+export async function getInternship(url: string): Promise<InternshipDetailWithProse> {
   const target = url.startsWith('http') ? url : `${ORIGIN}${url.startsWith('/') ? url : `/${url}`}`;
-  const { html, finalUrl } = await fetchHtml(target);
-  const detail = parseInternshalaDetail(html, finalUrl);
+
+  const [rawResult, webcmdResult] = await Promise.allSettled([
+    fetchHtml(target),
+    webcmdFetch(target, { maxChars: 8000 }),
+  ]);
+
+  if (rawResult.status !== 'fulfilled') throw rawResult.reason;
+  const detail = parseInternshalaDetail(rawResult.value.html, rawResult.value.finalUrl);
 
   if (!detail.title) {
     throw new ApplyOnceError('OPPORTUNITY_NOT_FOUND',
       `Could not read an internship at ${target}.`,
       'Confirm the URL points at an Internshala internship detail page.', { url: target });
   }
-  return detail;
+
+  const prose = webcmdResult.status === 'fulfilled' ? webcmdResult.value : null;
+  if (webcmdResult.status === 'rejected') {
+    log.warn('adapter.exec',
+      `webcmd prose extraction failed, continuing with markup only: ${(webcmdResult.reason as Error).message}`,
+      { url: target });
+  }
+
+  return {
+    ...detail,
+    description: prose?.content?.trim() || null,
+    fetch_tier: prose?.tier ?? null,
+  };
 }

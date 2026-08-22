@@ -19,6 +19,7 @@
  */
 
 import { fetchHtml } from './fetch.js';
+import { webcmdFetch } from './webcmd-fetch.js';
 import { clean } from './parse.js';
 import { ApplyOnceError } from '../errors.js';
 import { log } from '../logging/logger.js';
@@ -39,6 +40,8 @@ export const SEED_BRAND_SLUGS = [
 ];
 
 export interface RemoteScholarship {
+  /** Readability-extracted scheme prose from webcmd, when available. */
+  full_text?: string | null;
   opportunity_id: string;
   title: string;
   award: string | null;
@@ -259,8 +262,8 @@ export async function getScholarship(idOrUrl: string): Promise<RemoteScholarship
   try {
     const direct = await fetchBrandPage(slug);
     const exact = direct.find((r) => r.opportunity_id === slug);
-    if (exact) return exact;
-    if (direct.length > 0) return direct[0];
+    if (exact) return enrichWithProse(exact);
+    if (direct.length > 0) return enrichWithProse(direct[0]);
   } catch { /* fall through to a wider search */ }
 
   const { rows } = await searchScholarships({ limit: 60 });
@@ -270,5 +273,25 @@ export async function getScholarship(idOrUrl: string): Promise<RemoteScholarship
       `No scholarship found for "${idOrUrl}".`,
       'Run find_opportunities first and use an opportunity_id from those results.');
   }
-  return match;
+  return enrichWithProse(match);
+}
+
+
+/**
+ * Add webcmd's readability-extracted prose to one scholarship.
+ *
+ * The embedded JSON already carries structured eligibility, but scheme pages
+ * often state extra conditions in surrounding prose. webcmd's web/fetch strips
+ * the navigation and ads and returns just that text, which makes the
+ * eligibility reasoning materially better. Failure here is non-fatal: the
+ * structured fields alone are still useful.
+ */
+async function enrichWithProse(row: RemoteScholarship): Promise<RemoteScholarship> {
+  try {
+    const prose = await webcmdFetch(row.url, { maxChars: 6000 });
+    return { ...row, full_text: prose.content?.trim() || null };
+  } catch (err) {
+    log.debug('adapter.exec', `webcmd prose skipped for ${row.opportunity_id}: ${(err as Error).message}`);
+    return row;
+  }
 }

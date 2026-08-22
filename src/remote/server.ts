@@ -30,6 +30,7 @@ import { ApplyOnceOAuthProvider } from './oauth.js';
 import { z } from 'zod';
 
 import { searchInternships, getInternship } from './internships.js';
+import { webcmdAvailable } from './webcmd-fetch.js';
 import { searchScholarships, getScholarship } from './scholarships.js';
 import { evaluateCriteria } from '../tools/check-eligibility.js';
 import { ApplyOnceError, toApplyOnceError } from '../errors.js';
@@ -175,12 +176,23 @@ function buildServer(): McpServer {
 
       if (isInternshala) {
         const d = await getInternship(opportunity_url);
-        criteriaText = [d.who_can_apply, d.title, d.duration, d.location].filter(Boolean).join('\n');
+        // `d.description` is webcmd's readability extraction — clean role prose
+        // with navigation and ads stripped. It carries requirements that never
+        // appear in the structured markup, so it materially improves reasoning.
+        criteriaText = [d.who_can_apply, d.description, d.title, d.duration, d.location]
+          .filter(Boolean).join('\n');
         skills = d.skills;
-        summary = { title: d.title, organisation: d.company, deadline: d.apply_by, value: d.stipend, url: d.url };
+        summary = {
+          title: d.title, organisation: d.company, deadline: d.apply_by,
+          value: d.stipend, url: d.url,
+          fetched_via: d.fetch_tier ? `webcmd web/fetch (tier: ${d.fetch_tier})` : 'direct',
+        };
       } else {
         const s = await getScholarship(opportunity_url);
-        criteriaText = [s.eligibility, s.applicable_for, s.title, s.benefits].filter(Boolean).join('\n');
+        // s.full_text is webcmd's readability extraction of the scheme page —
+        // it often states conditions the structured JSON omits.
+        criteriaText = [s.eligibility, s.applicable_for, s.full_text, s.title, s.benefits]
+          .filter(Boolean).join('\n');
         deadlineIso = s.deadline_iso;
         summary = { title: s.title, organisation: s.offered_by, deadline: s.deadline_iso, value: s.award, url: s.url };
       }
@@ -269,10 +281,15 @@ function buildServer(): McpServer {
     ok: true,
     deployment: 'remote',
     version: VERSION,
+    engine: {
+      webcmd: await webcmdAvailable(),
+      command: 'web/fetch',
+      why: 'webcmd\'s web/fetch is declared browser:false and clientOwned, so it runs on a cloud host with no display. It escalates from a plain request to a real browser TLS fingerprint (impit) when a site refuses, routes through an SSRF-safe proxy, and returns readability-extracted prose. The local ApplyOnce server additionally drives webcmd\'s full browser for compiled adapters and form filling.',
+    },
     portals: [
       { portal: 'internshala', kind: 'internship',
         capabilities: { discover: true, read_detail: true, check_eligibility: true, fill: false },
-        source: 'server-rendered HTML over HTTPS (no browser required)' },
+        source: 'webcmd web/fetch (browserless tier escalation) + structured markup parsing' },
       { portal: 'scholarship', kind: 'scholarship',
         capabilities: { discover: true, read_detail: true, check_eligibility: true, fill: false },
         source: 'buddy4study brand pages, server-rendered __NEXT_DATA__' },
@@ -448,7 +465,12 @@ app.all('/mcp', requireBearerAuth({ verifier: oauth, resourceMetadataUrl: `${PUB
 });
 
 // Legacy: bare token in an Authorization header, no OAuth handshake.
-app.all('/token/mcp', (req, res) => {
+/**
+ * NOTE: this must NOT live under /token — the OAuth router owns that path and
+ * would parse the request as a token exchange (and reject it for a missing
+ * client_id). /direct/mcp keeps the bearer-token route clear of OAuth.
+ */
+app.all('/direct/mcp', (req, res) => {
   const header = String(req.headers.authorization ?? '');
   const bearer = header.replace(/^Bearer\s+/i, '');
   handleMcp(req, res, bearer).catch((err) => {
@@ -463,7 +485,7 @@ app.listen(PORT, () => {
   process.stderr.write(`  public : ${PUBLIC_URL}\n`);
   process.stderr.write(`  mcp    : POST /mcp            (OAuth — use this in Claude web)\n`);
   process.stderr.write(`  mcp    : POST /c/<token>/mcp  (token in path)\n`);
-  process.stderr.write(`  mcp    : POST /token/mcp      (Bearer token header)\n`);
+  process.stderr.write(`  mcp    : POST /direct/mcp     (Bearer token header, no OAuth)\n`);
   process.stderr.write(`  auth   : ${TOKEN ? 'token required' : 'OPEN — set APPLYONCE_TOKEN in production'}\n`);
   if (TOKEN) {
     process.stderr.write(`  connect: /c/${urlSafeToken()}/mcp\n`);
