@@ -71,7 +71,6 @@
     "@semantic-release/release-notes-generator": "^14.1.1",
     "@types/node": "^22.10.0",
     "@vitest/coverage-v8": "^4.1.11",
-    "conventional-changelog-conventionalcommits": "^10.4.0",
     "semantic-release": "^25.0.9",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
@@ -90,6 +89,7 @@
     "ip-address": ">=10.3.1",
     "tar": ">=7.5.21",
     "picomatch": ">=4.0.4",
-    "undici": ">=6.28.0"
+    "undici": ">=6.28.0",
+    "conventional-changelog-writer": ">=9.1.0"
   }
 }
