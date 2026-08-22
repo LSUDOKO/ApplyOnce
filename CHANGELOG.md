@@ -1,3 +1,9 @@
+## [1.4.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.3.0...v1.4.0) (2026-08-22)
+
+### Features
+
+* **remote:** run webcmd inside the remote server, not around it ([0861602](https://github.com/LSUDOKO/ApplyOnce/commit/08616028ecff066bd2e3fb9253f4881efe8364f9))
+
 ## [1.3.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.2.1...v1.3.0) (2026-08-22)
 
 ### Features
