@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Typecheck, test, safety gates
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # Adapters import @agentrhq/webcmd/registry; it is a peer dep, so the
+      # check script needs it resolvable even though CI never opens a browser.
+      - name: Install webcmd peer (no browser needed for checks)
+        run: npm i --no-save @agentrhq/webcmd
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests (includes HARD RULE assertions)
+        run: npm test
+
+      - name: Adapter safety gate
+        run: node scripts/check-adapters.mjs
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify MCP server answers tools/list
+        run: |
+          printf '%s\n%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
+          | timeout 30 node dist/mcp/server.js 2>/dev/null \
+          | node -e '
+            let buf="";process.stdin.on("data",d=>buf+=d).on("end",()=>{
+              const names=buf.split("\n").filter(Boolean).map(l=>JSON.parse(l)).find(m=>m.id===2).result.tools.map(t=>t.name);
+              const want=["find_opportunities","check_eligibility","fill_application","list_learned_portals","track_deadlines"];
+              for(const w of want) if(!names.includes(w)) {console.error("missing tool",w);process.exit(1);}
+              console.log("MCP tools OK:",names.join(", "));
+            });'
+
+  commitlint:
+    name: Conventional commits
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint PR commits
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose

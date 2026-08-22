@@ -1,0 +1,37 @@
+# Dependabot keeps dependencies current with conventional-commit PRs that
+# commitlint accepts and semantic-release classifies as patch releases.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Kolkata
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    labels: ["dependencies"]
+    groups:
+      # One PR for the whole test toolchain instead of five.
+      test-tooling:
+        patterns: ["vitest", "@vitest/*", "tsx", "typescript", "@types/*"]
+      mcp:
+        patterns: ["@modelcontextprotocol/*"]
+    ignore:
+      # webcmd is a peer dependency pinned to a verified range; bump manually
+      # after re-running the live adapter checks.
+      - dependency-name: "@agentrhq/webcmd"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Kolkata
+    commit-message:
+      prefix: "ci"
+    labels: ["dependencies", "ci"]

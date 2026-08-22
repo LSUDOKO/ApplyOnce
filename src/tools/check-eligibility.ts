@@ -12,6 +12,7 @@
 import { loadProfile, checkDocuments, type StudentProfile } from '../profile/loader.js';
 import { execAdapter, hasCompiledCommand } from '../webcmd/bridge.js';
 import { detectPortal } from './fill-application.js';
+import { parseDeadline } from './track-deadlines.js';
 import { ApplyOnceError } from '../errors.js';
 import { log, RunTracker } from '../logging/logger.js';
 
@@ -172,7 +173,56 @@ export function evaluateCriteria(
       evidence: 'school-level requirement detected' });
   }
 
-  /* ---- skills overlap (internships) ---- */
+  /* ---- internship availability: full-time / in-office / remote ---- */
+  const modes = profile.preferences?.work_mode ?? [];
+  if (/in-?office|work from office|on-?site/i.test(haystack) && modes.length > 0) {
+    const ok = modes.includes('onsite') || modes.includes('hybrid');
+    checks.push({ criterion: 'Work mode',
+      verdict: ok ? 'pass' : 'unknown',
+      reason: ok
+        ? 'The role is in-office and your preferences include onsite/hybrid work.'
+        : `The role is in-office; your preferences are ${modes.join('/')}. Confirm you can attend in person.`,
+      evidence: 'in-office requirement detected' });
+  }
+  if (/work from home|remote/i.test(haystack) && modes.length > 0 && !/in-?office/i.test(haystack)) {
+    checks.push({ criterion: 'Work mode',
+      verdict: modes.includes('remote') ? 'pass' : 'unknown',
+      reason: modes.includes('remote')
+        ? 'The role is remote and your preferences include remote work.'
+        : 'The role is remote; your preferences do not list remote. Confirm manually.',
+      evidence: 'remote role detected' });
+  }
+
+  /* ---- internship duration vs. what the student can commit ---- */
+  const durationMatch = haystack.match(/(\d+)\s*months?/i);
+  const wanted = profile.preferences?.duration_months;
+  if (durationMatch && wanted) {
+    const required = Number(durationMatch[1]);
+    checks.push({ criterion: 'Duration commitment',
+      verdict: wanted >= required ? 'pass' : 'unknown',
+      reason: wanted >= required
+        ? `The internship runs ${required} month(s); you can commit ${wanted}.`
+        : `The internship runs ${required} month(s) but your profile says you can commit ${wanted}. Confirm manually.`,
+      evidence: durationMatch[0] });
+  }
+
+  /* ---- start-date window, e.g. "can start between 6th Aug'26 and 10th Sep'26" ---- */
+  const windowMatch = haystack.match(/start[^.]{0,40}?between\s+(\d{1,2})(?:st|nd|rd|th)?\s+(\w{3,})'?\s*(\d{2,4})\s+and\s+(\d{1,2})(?:st|nd|rd|th)?\s+(\w{3,})'?\s*(\d{2,4})/i);
+  if (windowMatch && profile.preferences?.available_from) {
+    const yr = (y: string) => (y.length === 2 ? `20${y}` : y);
+    const end = Date.parse(`${windowMatch[4]} ${windowMatch[5]} ${yr(windowMatch[6])}`);
+    const available = Date.parse(profile.preferences.available_from);
+    if (!Number.isNaN(end) && !Number.isNaN(available)) {
+      const ok = available <= end;
+      checks.push({ criterion: 'Start-date window',
+        verdict: ok ? 'pass' : 'fail',
+        reason: ok
+          ? `You are available from ${profile.preferences.available_from}, inside the required start window.`
+          : `The latest start date is ${windowMatch[4]} ${windowMatch[5]} ${yr(windowMatch[6])}, but you are only available from ${profile.preferences.available_from}.`,
+        evidence: windowMatch[0] });
+    }
+  }
+
   return checks;
 }
 
@@ -212,7 +262,8 @@ export async function checkEligibility(input: CheckEligibilityInput) {
   ].filter(Boolean).join('\n');
 
   const checks = evaluateCriteria(criteriaText, profile, {
-    deadlineIso: (detail.deadline_iso as string) ?? null,
+    deadlineIso: (detail.deadline_iso as string)
+      ?? parseDeadline((detail.apply_by as string) ?? (detail.deadline as string) ?? null, null),
     alreadyApplied: Boolean(detail.already_applied),
   });
 
