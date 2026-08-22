@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/LSUDOKO/ApplyOnce/compare/v1.0.0...v1.0.1) (2026-08-22)
+
+### Dependencies
+
+* **deps:** drop unused zod dependency ([90b7fb1](https://github.com/LSUDOKO/ApplyOnce/commit/90b7fb1d648d2f5876d37c8d0919b5b28a03024c))
+
 ## 1.0.0 (2026-08-22)
 
 ### Features
