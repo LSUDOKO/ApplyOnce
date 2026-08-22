@@ -1,0 +1,13 @@
+{
+  "name": "webcmd-plugin-applyonce",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "ApplyOnce adapters for Internshala and the National Scholarship Portal",
+  "peerDependencies": {
+    "@agentrhq/webcmd": ">=0.7.0"
+  },
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  }
+}

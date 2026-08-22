@@ -1,0 +1,7 @@
+{
+  "name": "applyonce",
+  "version": "0.1.0",
+  "description": "Self-learning adapters that fill Indian student scholarship and internship applications up to — but never past — the final submit button",
+  "webcmd": ">=0.7.0",
+  "author": { "name": "LSUDOKO", "handle": "LSUDOKO" }
+}
