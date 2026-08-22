@@ -9,4 +9,4 @@ data/profiles/*.json
 data/runs/
 coverage/
 .DS_Store
-webcmd/
+/webcmd/
