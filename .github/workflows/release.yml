@@ -22,7 +22,7 @@ jobs:
     # still flow through because they are conventional "chore(deps)" commits.
     if: "!contains(github.event.head_commit.message, '[skip actions]')"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
