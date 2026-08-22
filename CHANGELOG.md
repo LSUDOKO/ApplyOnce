@@ -1,3 +1,9 @@
+## [1.7.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.6.0...v1.7.0) (2026-08-22)
+
+### Features
+
+* **fixture:** redesign the demo portal as a public-service scholarship gateway ([2abab5c](https://github.com/LSUDOKO/ApplyOnce/commit/2abab5cd9311517eae44c788a13ca82f7ab74a02)), references [#10643c](https://github.com/LSUDOKO/ApplyOnce/issues/10643c)
+
 ## [1.6.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.5.0...v1.6.0) (2026-08-22)
 
 ### Features
