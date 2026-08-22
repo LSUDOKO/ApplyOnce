@@ -150,15 +150,31 @@ export const POLITENESS = {
   maxPagesPerRun: 3,
 } as const;
 
-/** Signals that mean "the site is asking us to stop". We stop — we do not evade. RULE 4. */
-const ANTI_BOT_MARKERS = [
-  'just a moment', 'checking your browser', 'cf-challenge', 'captcha',
-  'are you a robot', 'access denied', 'unusual traffic', 'rate limit',
+/**
+ * Signals that mean "the site is asking us to stop". We stop — we do not evade.
+ * RULE 4.
+ *
+ * These are matched as PHRASES a challenge page actually shows a visitor, not as
+ * bare substrings. A naive `includes('captcha')` false-positives on any page that
+ * merely LOADS a captcha library — Internshala's listing page embeds
+ * `var is_g_recaptcha = "..."` while serving 200 real results. Blocking on that
+ * would refuse a perfectly good page, so each marker is anchored to wording that
+ * only appears when the visitor is actually being challenged.
+ */
+const ANTI_BOT_PATTERNS: Array<{ label: string; re: RegExp }> = [
+  { label: 'just a moment', re: /\bjust a moment\b/i },
+  { label: 'checking your browser', re: /checking your browser before/i },
+  { label: 'cloudflare challenge', re: /cf-challenge|cf_chl_|__cf_chl_/i },
+  { label: 'captcha challenge', re: /(please\s+)?(complete|solve|verify)[^.]{0,30}\bcaptcha\b|captcha[^.]{0,20}required|enter the characters/i },
+  { label: 'are you a robot', re: /are you a (robot|human)|verify you are (a )?human/i },
+  { label: 'access denied', re: /\baccess denied\b|you (have been|are) blocked/i },
+  { label: 'unusual traffic', re: /unusual traffic|automated queries|suspicious activity detected/i },
+  { label: 'rate limited', re: /rate limit(ed)? exceeded|too many requests/i },
 ];
 
 export function detectAntiBot(pageTextOrTitle: string): string | null {
-  const haystack = String(pageTextOrTitle ?? '').toLowerCase();
-  return ANTI_BOT_MARKERS.find((marker) => haystack.includes(marker)) ?? null;
+  const haystack = String(pageTextOrTitle ?? '');
+  return ANTI_BOT_PATTERNS.find(({ re }) => re.test(haystack))?.label ?? null;
 }
 
 export function assertNoAntiBot(pageTextOrTitle: string, site: string): void {

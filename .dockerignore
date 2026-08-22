@@ -1,0 +1,10 @@
+node_modules
+dist
+webcmd
+data/runs
+data/profiles/*.json
+!data/profiles/sample_profile.json
+.git
+.github
+*.log
+fixtures

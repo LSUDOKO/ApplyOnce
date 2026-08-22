@@ -1,0 +1,22 @@
+# Render blueprint for the ApplyOnce REMOTE MCP server.
+# Deploy: push to GitHub, then New > Blueprint on render.com and pick this repo.
+services:
+  - type: web
+    name: applyonce-mcp
+    runtime: node
+    plan: free
+    region: singapore              # closest to the Indian portals we read
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/remote/server.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: APPLYONCE_TOKEN
+        generateValue: true        # Render generates a secret; copy it from the dashboard
+      - key: APPLYONCE_LOG_FORMAT
+        value: json
+      - key: APPLYONCE_LOG_LEVEL
+        value: info

@@ -40,9 +40,20 @@ export function assertNotSubmit(target, context = 'action') {
 /** Anti-bot markers — HARD RULE 4: we stop, we never try to evade. */
 export function assertNoChallenge(pageText, site) {
   const haystack = String(pageText ?? '').toLowerCase();
-  const marker = ['just a moment', 'checking your browser', 'captcha',
-    'are you a robot', 'unusual traffic', 'access denied']
-    .find((m) => haystack.includes(m));
+  // Phrases a challenge page actually shows — not bare substrings. A naive
+  // includes('captcha') false-positives on any page that merely loads a captcha
+  // library (Internshala embeds `is_g_recaptcha` while serving real results).
+  const patterns = [
+    ['just a moment', /\bjust a moment\b/i],
+    ['checking your browser', /checking your browser before/i],
+    ['cloudflare challenge', /cf-challenge|cf_chl_/i],
+    ['captcha challenge', /(complete|solve|verify)[^.]{0,30}\bcaptcha\b|captcha[^.]{0,20}required/i],
+    ['are you a robot', /are you a (robot|human)|verify you are (a )?human/i],
+    ['access denied', /\baccess denied\b|you (have been|are) blocked/i],
+    ['unusual traffic', /unusual traffic|automated queries/i],
+  ];
+  const hit = patterns.find(([, re]) => re.test(pageText || ''));
+  const marker = hit ? hit[0] : undefined;
   if (marker) {
     throw new CommandExecutionError(
       `${site} served an anti-bot challenge (matched "${marker}")`,

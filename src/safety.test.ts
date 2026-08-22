@@ -58,9 +58,19 @@ describe('HARD RULE 4 — politeness, no evasion', () => {
     expect(POLITENESS.maxAttempts).toBeLessThanOrEqual(2);
   });
 
-  it('detects anti-bot pages', () => {
+  it('detects genuine anti-bot challenge pages', () => {
     expect(detectAntiBot('Just a moment...')).toBe('just a moment');
-    expect(detectAntiBot('Please complete the CAPTCHA')).toBe('captcha');
+    expect(detectAntiBot('Please complete the CAPTCHA to continue')).toBe('captcha challenge');
+    expect(detectAntiBot('Checking your browser before accessing')).toBe('checking your browser');
+    expect(detectAntiBot('Access Denied')).toBe('access denied');
+    expect(detectAntiBot('We have detected unusual traffic from your network')).toBe('unusual traffic');
+  });
+
+  it('does NOT false-positive on a page that merely loads a captcha library', () => {
+    // Internshala embeds this on its listing page while serving 200 real cards.
+    // Blocking here would refuse a perfectly good page (verified 2026-08-22).
+    expect(detectAntiBot('var is_g_recaptcha = "6Lcqj0EsAAAAAL4K2T7";')).toBeNull();
+    expect(detectAntiBot('<script src="https://www.google.com/recaptcha/api.js">')).toBeNull();
     expect(detectAntiBot('Front End Development internship')).toBeNull();
   });
 
