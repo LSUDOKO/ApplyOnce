@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.2.1...v1.3.0) (2026-08-22)
+
+### Features
+
+* **remote:** OAuth 2.1 so Claude web Connect works ([2a5af48](https://github.com/LSUDOKO/ApplyOnce/commit/2a5af480511731c9478957a30d4c5dd0b37ccb2f))
+
 ## [1.2.1](https://github.com/LSUDOKO/ApplyOnce/compare/v1.2.0...v1.2.1) (2026-08-22)
 
 ### Bug Fixes
