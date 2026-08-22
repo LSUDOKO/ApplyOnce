@@ -20,3 +20,11 @@ services:
         value: json
       - key: APPLYONCE_LOG_LEVEL
         value: info
+      # OAuth metadata advertises ABSOLUTE endpoints, so the server must know
+      # its public origin. Render injects RENDER_EXTERNAL_URL automatically;
+      # this makes the dependency explicit.
+      - key: PUBLIC_URL
+        fromService:
+          type: web
+          name: applyonce-mcp
+          envVarKey: RENDER_EXTERNAL_URL

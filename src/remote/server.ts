@@ -24,6 +24,9 @@ import { randomUUID, timingSafeEqual } from 'node:crypto';
 import express, { type Request, type Response } from 'express';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
+import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
+import { ApplyOnceOAuthProvider } from './oauth.js';
 import { z } from 'zod';
 
 import { searchInternships, getInternship } from './internships.js';
@@ -302,6 +305,18 @@ function buildServer(): McpServer {
  * ------------------------------------------------------------------ */
 const app = express();
 app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: false }));      // the OAuth consent form
+
+/**
+ * PUBLIC_URL must be the externally reachable origin: OAuth metadata advertises
+ * absolute endpoints, and a client redirected to the wrong host cannot connect.
+ * Render exposes it as RENDER_EXTERNAL_URL.
+ */
+const PUBLIC_URL = process.env.PUBLIC_URL
+  ?? process.env.RENDER_EXTERNAL_URL
+  ?? `http://localhost:${PORT}`;
+
+const oauth = new ApplyOnceOAuthProvider(TOKEN);
 
 app.use((_req, res, next) => {
   res.setHeader('access-control-allow-origin', '*');
@@ -311,6 +326,38 @@ app.use((_req, res, next) => {
   next();
 });
 app.options('/*splat', (_req, res) => { res.sendStatus(204); });
+
+/**
+ * OAuth 2.1 discovery, dynamic client registration, authorize, token, revoke.
+ * Claude web calls these on Connect; without them registration fails outright.
+ */
+app.use(mcpAuthRouter({
+  provider: oauth,
+  issuerUrl: new URL(PUBLIC_URL),
+  baseUrl: new URL(PUBLIC_URL),
+  resourceName: 'ApplyOnce',
+  scopesSupported: ['applyonce:read'],
+}));
+
+/** The consent form posts here with the access code the user pasted. */
+app.post('/oauth/consent', (req, res) => {
+  const body = req.body as Record<string, string>;
+  if (!oauth.verifySecret(String(body.secret ?? ''))) {
+    res.status(401).setHeader('content-type', 'text/html; charset=utf-8');
+    res.end('<p style="font-family:system-ui;max-width:420px;margin:8vh auto">'
+      + 'That access code is not correct. <a href="javascript:history.back()">Go back</a> and try again.</p>');
+    return;
+  }
+  oauth.clientsStore.getClient(String(body.client_id ?? '')).then((client) => {
+    if (!client) { res.status(400).end('Unknown client'); return; }
+    oauth.completeAuthorization(client, {
+      redirectUri: String(body.redirect_uri ?? ''),
+      codeChallenge: String(body.code_challenge ?? ''),
+      state: body.state ? String(body.state) : undefined,
+      resource: body.resource ? String(body.resource) : undefined,
+    }, res);
+  }).catch(() => res.status(500).end('Consent failed'));
+});
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true, service: 'applyonce-remote', version: VERSION, transport: 'streamable-http' });
@@ -388,8 +435,20 @@ app.all('/c/:token/mcp', (req, res) => {
   });
 });
 
-// Bare /mcp, reading the token from an Authorization header instead.
-app.all('/mcp', (req, res) => {
+/**
+ * OAuth-protected MCP endpoint — this is what Claude web connects to.
+ * requireBearerAuth answers 401 with a WWW-Authenticate header pointing at the
+ * resource metadata, which is what triggers the client's OAuth flow.
+ */
+app.all('/mcp', requireBearerAuth({ verifier: oauth, resourceMetadataUrl: `${PUBLIC_URL}/.well-known/oauth-protected-resource` }), (req, res) => {
+  handleMcp(req, res, TOKEN).catch((err) => {
+    log.error('tool.error', `MCP transport error: ${(err as Error).message}`);
+    if (!res.headersSent) res.status(500).json({ error: 'internal error' });
+  });
+});
+
+// Legacy: bare token in an Authorization header, no OAuth handshake.
+app.all('/token/mcp', (req, res) => {
   const header = String(req.headers.authorization ?? '');
   const bearer = header.replace(/^Bearer\s+/i, '');
   handleMcp(req, res, bearer).catch((err) => {
@@ -401,7 +460,10 @@ app.all('/mcp', (req, res) => {
 app.listen(PORT, () => {
   process.stderr.write(`ApplyOnce remote MCP server v${VERSION} listening on :${PORT}\n`);
   process.stderr.write(`  health : GET  /health\n`);
-  process.stderr.write(`  mcp    : POST /c/<token>/mcp   (or /mcp with a Bearer token)\n`);
+  process.stderr.write(`  public : ${PUBLIC_URL}\n`);
+  process.stderr.write(`  mcp    : POST /mcp            (OAuth — use this in Claude web)\n`);
+  process.stderr.write(`  mcp    : POST /c/<token>/mcp  (token in path)\n`);
+  process.stderr.write(`  mcp    : POST /token/mcp      (Bearer token header)\n`);
   process.stderr.write(`  auth   : ${TOKEN ? 'token required' : 'OPEN — set APPLYONCE_TOKEN in production'}\n`);
   if (TOKEN) {
     process.stderr.write(`  connect: /c/${urlSafeToken()}/mcp\n`);
