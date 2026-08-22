@@ -1,3 +1,9 @@
+## [1.5.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.4.1...v1.5.0) (2026-08-22)
+
+### Features
+
+* measure real token savings from webcmd, not just steps ([b0c6144](https://github.com/LSUDOKO/ApplyOnce/commit/b0c6144c6465778f7b6eadcb8dc8139479917c3b))
+
 ## [1.4.1](https://github.com/LSUDOKO/ApplyOnce/compare/v1.4.0...v1.4.1) (2026-08-22)
 
 ### Documentation
