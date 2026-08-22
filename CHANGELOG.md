@@ -1,3 +1,13 @@
+## [1.6.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.5.0...v1.6.0) (2026-08-22)
+
+### Features
+
+* **remote:** return verifiable webcmd evidence in every tool response ([3c5d475](https://github.com/LSUDOKO/ApplyOnce/commit/3c5d47504ff0981fe8c34a1553201cc884f3e516))
+
+### Documentation
+
+* **demo:** professional video plan, slides and verified cue cards ([151f4bb](https://github.com/LSUDOKO/ApplyOnce/commit/151f4bba6132864ead8b35a7de19e6117921f816))
+
 ## [1.5.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.4.1...v1.5.0) (2026-08-22)
 
 ### Features
