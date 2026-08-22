@@ -239,6 +239,48 @@ Portals reskin constantly. ApplyOnce survives that at three layers:
 
 When all strategies fail, the tool returns `SELF_HEAL_FAILED` with the hint to re-author that step. It does not loop.
 
+## How webcmd is used (both deployments)
+
+ApplyOnce runs webcmd in **two different modes**, because the two deployments have
+different capabilities. Neither reimplements it.
+
+| | Local server (stdio) | Remote server (HTTP) |
+|---|---|---|
+| webcmd surface | the `webcmd` CLI + compiled adapters | `web/fetch`, imported in-process |
+| Browser | yes — CloakBrowser via webcmd | none |
+| Learn-once registry | `webcmd list -f json` | n/a |
+| Fill applications | ✅ | ❌ read-only by design |
+
+**Local — webcmd's full stack.** `src/webcmd/bridge.ts` spawns the real `webcmd`
+binary. The six adapters in `plugins/applyonce/` are registered webcmd commands
+(`cli()` from `@agentrhq/webcmd/registry`), so they appear in `webcmd list -f json`
+— that registry lookup *is* the learn-once branch point. Filling drives webcmd's
+`IPage`: `fillText()` with verified read-back, `uploadFiles()`, `setChecked()`.
+
+**Remote — webcmd's browserless tier.** A cloud host has no display, so the remote
+server imports webcmd's own `web/fetch` command and calls the same `func()` the CLI
+invokes. That command is declared browserless in webcmd's manifest, which is
+exactly why it works there:
+
+```json
+{ "site": "web", "name": "fetch", "browser": false,
+  "clientOwned": true, "packageExport": "./fetch/command" }
+```
+
+What that buys over a bare `fetch()`:
+
+- **Tier escalation** — a plain request first; if the site refuses, webcmd retries
+  through `impit` with a real Chrome/Firefox TLS + header fingerprint. The tier it
+  needed is returned to the caller as `fetched_via` and logged as a self-heal.
+- **SSRF-safe proxy** — private and loopback destinations are refused.
+- **Readability extraction** — clean role/scheme prose with navigation and ads
+  stripped. That text is what `check_eligibility` reasons over.
+
+Structured fields that live in markup (the stipend chip, the `APPLY BY`
+heading/body pair, skill tabs) still come from raw HTML parsing, because webcmd's
+fetch always returns extracted text. Each tool does the job it is good at, and
+`list_learned_portals` reports which engine answered.
+
 ## Architecture
 
 ```
