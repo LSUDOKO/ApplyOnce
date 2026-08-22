@@ -253,7 +253,7 @@ export async function searchScholarships(options: {
 }
 
 /** One scholarship by slug — searches the brand pages for a matching id. */
-export async function getScholarship(idOrUrl: string): Promise<RemoteScholarship> {
+export async function getScholarship(idOrUrl: string, traceId?: string): Promise<RemoteScholarship> {
   const slug = idOrUrl.includes('/')
     ? idOrUrl.split('/').filter(Boolean).pop()!
     : idOrUrl;
@@ -262,8 +262,8 @@ export async function getScholarship(idOrUrl: string): Promise<RemoteScholarship
   try {
     const direct = await fetchBrandPage(slug);
     const exact = direct.find((r) => r.opportunity_id === slug);
-    if (exact) return enrichWithProse(exact);
-    if (direct.length > 0) return enrichWithProse(direct[0]);
+    if (exact) return enrichWithProse(exact, traceId);
+    if (direct.length > 0) return enrichWithProse(direct[0], traceId);
   } catch { /* fall through to a wider search */ }
 
   const { rows } = await searchScholarships({ limit: 60 });
@@ -273,7 +273,7 @@ export async function getScholarship(idOrUrl: string): Promise<RemoteScholarship
       `No scholarship found for "${idOrUrl}".`,
       'Run find_opportunities first and use an opportunity_id from those results.');
   }
-  return enrichWithProse(match);
+  return enrichWithProse(match, traceId);
 }
 
 
@@ -286,9 +286,9 @@ export async function getScholarship(idOrUrl: string): Promise<RemoteScholarship
  * eligibility reasoning materially better. Failure here is non-fatal: the
  * structured fields alone are still useful.
  */
-async function enrichWithProse(row: RemoteScholarship): Promise<RemoteScholarship> {
+async function enrichWithProse(row: RemoteScholarship, traceId?: string): Promise<RemoteScholarship> {
   try {
-    const prose = await webcmdFetch(row.url, { maxChars: 6000 });
+    const prose = await webcmdFetch(row.url, { maxChars: 6000, traceId });
     return { ...row, full_text: prose.content?.trim() || null };
   } catch (err) {
     log.debug('adapter.exec', `webcmd prose skipped for ${row.opportunity_id}: ${(err as Error).message}`);

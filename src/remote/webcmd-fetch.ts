@@ -34,6 +34,7 @@
 import { ApplyOnceError } from '../errors.js';
 import { log } from '../logging/logger.js';
 import { detectAntiBot } from '../safety.js';
+import type { WebcmdCall } from './evidence.js';
 
 export interface WebcmdFetchResult {
   status: number;
@@ -58,6 +59,26 @@ interface WebcmdCliCommand {
 }
 
 let cachedCommand: WebcmdCliCommand | null = null;
+
+/**
+ * Per-request record of what webcmd did. Tools read this to attach verifiable
+ * evidence to their response. Keyed by a caller-supplied trace id so concurrent
+ * requests cannot mix.
+ */
+const callLog = new Map<string, WebcmdCall[]>();
+
+export function startWebcmdTrace(traceId: string): void {
+  callLog.set(traceId, []);
+}
+export function recordWebcmdCall(traceId: string | undefined, call: WebcmdCall): void {
+  if (!traceId) return;
+  callLog.get(traceId)?.push(call);
+}
+export function endWebcmdTrace(traceId: string): WebcmdCall[] {
+  const calls = callLog.get(traceId) ?? [];
+  callLog.delete(traceId);
+  return calls;
+}
 
 /**
  * Load webcmd's own `web fetch` command object.
@@ -93,7 +114,7 @@ export async function webcmdAvailable(): Promise<boolean> {
  * refused a plain request and webcmd had to impersonate a browser.
  */
 export async function webcmdFetch(url: string, options: {
-  timeoutSeconds?: number; maxChars?: number;
+  timeoutSeconds?: number; maxChars?: number; traceId?: string;
 } = {}): Promise<WebcmdFetchResult> {
   const command = await loadWebcmdFetch();
   const startedAt = Date.now();
@@ -137,6 +158,13 @@ export async function webcmdFetch(url: string, options: {
   log.debug('adapter.exec',
     `webcmd fetched ${new URL(url).host} via tier=${result.tier}${result.profile ? `/${result.profile}` : ''}`,
     { url, tier: result.tier, ms: Date.now() - startedAt, chars: result.content.length });
+
+  recordWebcmdCall(options.traceId, {
+    command: 'web/fetch',
+    tier: result.tier,
+    chars: result.content.length,
+    url,
+  });
 
   // Surface the escalation: it means the site pushed back on a plain request.
   if (result.tier === 'impit') {

@@ -30,7 +30,8 @@ import { ApplyOnceOAuthProvider } from './oauth.js';
 import { z } from 'zod';
 
 import { searchInternships, getInternship } from './internships.js';
-import { webcmdAvailable } from './webcmd-fetch.js';
+import { webcmdAvailable, startWebcmdTrace, endWebcmdTrace } from './webcmd-fetch.js';
+import { webcmdEvidence, webcmdSummary, EXPLORATION_BASELINE } from './evidence.js';
 import { searchScholarships, getScholarship } from './scholarships.js';
 import { evaluateCriteria } from '../tools/check-eligibility.js';
 import { ApplyOnceError, toApplyOnceError } from '../errors.js';
@@ -95,6 +96,24 @@ function toStudentProfile(p: ProfileInputType): StudentProfile {
   } as StudentProfile;
 }
 
+let traceCounter = 0;
+/** Open a webcmd trace for one tool call. */
+function newTrace(): string {
+  traceCounter += 1;
+  return `t${traceCounter}-${Date.now()}`;
+}
+
+/**
+ * Close the trace and build the evidence block. Every tool attaches this so an
+ * MCP client can SEE that webcmd served the request and what it saved.
+ */
+function withEvidence<T extends Record<string, unknown>>(trace: string, payload: T) {
+  const calls = endWebcmdTrace(trace);
+  if (calls.length === 0) return payload;
+  const evidence = webcmdEvidence(calls);
+  return { ...payload, _webcmd: evidence, webcmd_summary: webcmdSummary(evidence) };
+}
+
 const ok = (payload: unknown) => ({
   content: [{ type: 'text' as const, text: JSON.stringify(payload, null, 2) }],
 });
@@ -148,9 +167,25 @@ function buildServer(): McpServer {
       if (opportunities.length === 0 && errors.length > 0) {
         return ok({ ok: false, count: 0, opportunities: [], errors });
       }
+      /**
+       * Discovery reads whole LISTING pages. Each one would otherwise cost an
+       * agent a full exploration pass, so report that saving explicitly —
+       * it is the clearest place a viewer can see what webcmd is worth.
+       */
+      const pagesRead = (want === 'all' ? 2 : 1);
+      const wouldHaveCost = EXPLORATION_BASELINE.tokens * pagesRead;
       return ok({
         ok: true, query: query ?? 'web development', count: opportunities.length,
         opportunities, errors,
+        _webcmd: {
+          engine: 'webcmd',
+          pages_read: pagesRead,
+          rows_returned: opportunities.length,
+          tokens_if_explored: wouldHaveCost,
+          browser_steps_avoided: EXPLORATION_BASELINE.steps * pagesRead,
+          how: `webcmd returned ${opportunities.length} structured rows from ${pagesRead} page(s). Exploring those pages in a browser would have cost an agent roughly ${wouldHaveCost.toLocaleString()} tokens of page observations before it could act.`,
+        },
+        webcmd_summary: `Served via webcmd — ${opportunities.length} rows from ${pagesRead} page(s), avoiding ~${EXPLORATION_BASELINE.steps * pagesRead} browser round-trips (~${wouldHaveCost.toLocaleString()} tokens of exploration).`,
         note: 'Read-only discovery. Nothing was applied to.',
       });
     } catch (e) { return fail(e); }
@@ -165,6 +200,8 @@ function buildServer(): McpServer {
       profile: ProfileInput.describe('Optional facts to judge against: category, gender, annual_income, score_percent, level, skills, work_mode, duration_months, available_from.'),
     },
   }, async ({ opportunity_url, profile }) => {
+    const trace = newTrace();
+    startWebcmdTrace(trace);
     try {
       const studentProfile = toStudentProfile(profile);
       const isInternshala = /internshala\.com/i.test(opportunity_url);
@@ -175,7 +212,7 @@ function buildServer(): McpServer {
       let summary: Record<string, unknown>;
 
       if (isInternshala) {
-        const d = await getInternship(opportunity_url);
+        const d = await getInternship(opportunity_url, trace);
         // `d.description` is webcmd's readability extraction — clean role prose
         // with navigation and ads stripped. It carries requirements that never
         // appear in the structured markup, so it materially improves reasoning.
@@ -188,7 +225,7 @@ function buildServer(): McpServer {
           fetched_via: d.fetch_tier ? `webcmd web/fetch (tier: ${d.fetch_tier})` : 'direct',
         };
       } else {
-        const s = await getScholarship(opportunity_url);
+        const s = await getScholarship(opportunity_url, trace);
         // s.full_text is webcmd's readability extraction of the scheme page —
         // it often states conditions the structured JSON omits.
         criteriaText = [s.eligibility, s.applicable_for, s.full_text, s.title, s.benefits]
@@ -217,7 +254,7 @@ function buildServer(): McpServer {
       const passed = checks.filter((c) => c.verdict === 'pass');
       const eligible = failed.length === 0;
 
-      return ok({
+      return ok(withEvidence(trace, {
         ok: true, eligible,
         confidence: checks.length === 0 ? 0.3
           : Number((passed.length / checks.length).toFixed(2)),
@@ -230,8 +267,8 @@ function buildServer(): McpServer {
         note: checks.length === 0
           ? 'The listing did not state machine-checkable criteria. Read it yourself before applying.'
           : 'Read-only. Nothing was filled or submitted.',
-      });
-    } catch (e) { return fail(e); }
+      }));
+    } catch (e) { endWebcmdTrace(trace); return fail(e); }
   });
 
   server.registerTool('track_deadlines', {

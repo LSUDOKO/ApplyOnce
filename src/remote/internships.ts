@@ -69,12 +69,12 @@ export interface InternshipDetailWithProse extends ParsedInternshipDetail {
  * refused and webcmd escalated to a real browser fingerprint — signal we
  * surface rather than hide.
  */
-export async function getInternship(url: string): Promise<InternshipDetailWithProse> {
+export async function getInternship(url: string, traceId?: string): Promise<InternshipDetailWithProse> {
   const target = url.startsWith('http') ? url : `${ORIGIN}${url.startsWith('/') ? url : `/${url}`}`;
 
   const [rawResult, webcmdResult] = await Promise.allSettled([
     fetchHtml(target),
-    webcmdFetch(target, { maxChars: 8000 }),
+    webcmdFetch(target, { maxChars: 8000, traceId }),
   ]);
 
   if (rawResult.status !== 'fulfilled') throw rawResult.reason;
