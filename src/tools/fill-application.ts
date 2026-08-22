@@ -102,6 +102,8 @@ export function buildFillPlan(formFields: FormField[], profile: StudentProfile) 
   const files: Record<string, string> = {};
   const unmapped: Array<{ label: string; selector: string; required: boolean; reason: string }> = [];
   const mappedDetail: Array<{ label: string; profile_key: string; confidence: number; method: string }> = [];
+  /** Child dropdowns whose options appear only after a parent cascade fires. */
+  const deferredSelects: string[] = [];
 
   for (const field of formFields) {
     if (!field.selector) continue;
@@ -137,15 +139,28 @@ export function buildFillPlan(formFields: FormField[], profile: StudentProfile) 
       const kind = resolved.key.endsWith('category') ? 'category'
         : resolved.key.endsWith('gender') ? 'gender' : undefined;
       const option = matchSelectOption(String(resolved.value), field.options ?? [], kind);
-      if (option) selects[field.selector] = option;
-      else unmapped.push({ label: field.label, selector: field.selector, required: field.required,
-        reason: `no dropdown option matches "${String(resolved.value)}"` });
+      if (option) {
+        selects[field.selector] = option;
+      } else if ((field.options ?? []).length <= 1) {
+        /**
+         * DEPENDENT DROPDOWN: a select with no real options yet is almost always
+         * the child of a cascade (state -> district). Its options only exist
+         * after the parent is chosen, so we pass the WANTED value through and
+         * let the adapter resolve it after the cascade fires, rather than
+         * declaring it unmapped up front.
+         */
+        selects[field.selector] = String(resolved.value);
+        deferredSelects.push(field.selector);
+      } else {
+        unmapped.push({ label: field.label, selector: field.selector, required: field.required,
+          reason: `no dropdown option matches "${String(resolved.value)}"` });
+      }
       continue;
     }
     values[field.selector] = formatForField(resolved, field);
   }
 
-  return { values, selects, files, unmapped, mappedDetail };
+  return { values, selects, files, unmapped, mappedDetail, deferredSelects };
 }
 
 export async function fillApplication(input: FillApplicationInput) {

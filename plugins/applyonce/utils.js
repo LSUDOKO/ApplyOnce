@@ -137,8 +137,21 @@ export async function scrapeFormFields(page) {
     const seen = new Set();
     const controls = document.querySelectorAll('input:not([type=hidden]):not([type=submit]):not([type=button]), textarea, select');
 
+    /**
+     * VISIBILITY (verified 2026-08-22): Internshala renders its application
+     * form inside collapsed accordion sections, so every control reports
+     * offsetParent === null and a zero-size rect even though the form is real
+     * and fillable. Requiring on-screen geometry therefore found ZERO fields.
+     *
+     * We instead skip only controls explicitly removed via display:none on the
+     * element itself, and always keep file inputs (they are styled away by
+     * design on nearly every portal).
+     */
     for (const el of controls) {
-      if (el.offsetParent === null && el.type !== 'file') continue;   // skip hidden
+      if (el.type !== 'file') {
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') continue;
+      }
       let label = '';
       if (el.id) {
         const forLabel = document.querySelector('label[for="' + CSS.escape(el.id) + '"]');

@@ -57,7 +57,27 @@ cli({
     const dryRun = Boolean(kwargs['dry-run']);
 
     await page.goto(url, { waitUntil: 'load', settleMs: 1500 });
-    await page.wait({ time: 2 });
+
+    /**
+     * Internshala is a client-rendered SPA that shows "Loading, please wait..."
+     * for several seconds after `load` fires. A fixed 2s wait raced the hydration
+     * and saw an empty page, so poll for the real control instead of guessing.
+     */
+    await page.evaluate(`(async () => {
+      const ready = () => {
+        const txt = (document.body && document.body.innerText) || '';
+        if (/Loading, please wait/i.test(txt.slice(0, 200))) return false;
+        const hasApply = Array.from(document.querySelectorAll('button, a'))
+          .some((b) => /apply now/i.test((b.textContent || '').trim()));
+        const hasForm = document.querySelectorAll('input:not([type=hidden])').length > 2;
+        const hasApplied = !!document.querySelector('.already_applied, #already_applied');
+        return hasApply || hasForm || hasApplied;
+      };
+      for (let i = 0; i < 40 && !ready(); i++) {
+        await new Promise((r) => setTimeout(r, 500));
+      }
+      return ready();
+    })()`);
 
     const pageState = await page.evaluate(`(() => {
       const clean = (s) => String(s || '').replace(/\\s+/g, ' ').trim();
@@ -101,7 +121,18 @@ cli({
         btn.click();
         return true;
       })()`);
-      if (opened) await page.wait({ time: 3 });
+      if (opened) {
+        // Wait for the application form (or the resume gate) to actually render.
+        await page.evaluate(`(async () => {
+          const ready = () => document.querySelectorAll('input:not([type=hidden]), textarea, select').length > 2
+            || /\\/student\\/resume/.test(location.href);
+          for (let i = 0; i < 30 && !ready(); i++) {
+            await new Promise((r) => setTimeout(r, 500));
+          }
+          return ready();
+        })()`);
+        await page.wait({ time: 1 });
+      }
     }
 
     // Internshala may divert to /student/resume when the profile is incomplete.

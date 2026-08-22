@@ -112,6 +112,34 @@ cli({
             selectsSet[selector] = res.chosen;
             // Give a state->district cascade time to fetch and render.
             await page.wait({ time: 1 });
+          } else if (res && res.reason === 'no matching option') {
+            /**
+             * DEPENDENT DROPDOWN RETRY: the child of a cascade (district) has
+             * no options until its parent (state) has been set and the page
+             * has re-rendered. Wait once and try again before giving up.
+             * Bounded to a single retry — HARD RULE 4, no aggressive loops.
+             */
+            await page.wait({ time: 2 });
+            const retry = await page.evaluate(`((sel, want) => {
+              const el = document.querySelector(sel);
+              if (!el || el.tagName !== 'SELECT') return { ok: false, reason: 'select not found' };
+              const norm = (s) => String(s || '').trim().toLowerCase();
+              let match = Array.from(el.options).find((o) => norm(o.textContent) === norm(want));
+              if (!match) match = Array.from(el.options).find((o) => norm(o.textContent).includes(norm(want)));
+              if (!match) return { ok: false, reason: 'no matching option after cascade',
+                options: Array.from(el.options).map((o) => o.textContent.trim()).slice(0, 30) };
+              el.value = match.value;
+              el.dispatchEvent(new Event('input', { bubbles: true }));
+              el.dispatchEvent(new Event('change', { bubbles: true }));
+              return { ok: true, chosen: match.textContent.trim(), healed: true };
+            })(${JSON.stringify(selector)}, ${JSON.stringify(String(wanted))})`);
+            if (retry && retry.ok) {
+              selectsSet[selector] = retry.chosen;
+              warnings.push(`Dependent dropdown ${selector} resolved after its parent cascade populated it.`);
+            } else {
+              unfilled.push({ selector, reason: (retry && retry.reason) || 'select failed',
+                available_options: (retry && retry.options) || undefined });
+            }
           } else {
             unfilled.push({ selector, reason: (res && res.reason) || 'select failed',
               available_options: (res && res.options) || undefined });
