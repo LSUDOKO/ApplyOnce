@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.1.0...v1.2.0) (2026-08-22)
+
+### Features
+
+* **remote:** HTTP MCP server for Claude web, no browser required ([c709614](https://github.com/LSUDOKO/ApplyOnce/commit/c7096147d5966f21fd0d65a83948b582324c3758))
+
 ## [1.1.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.0.1...v1.1.0) (2026-08-22)
 
 ### Features
