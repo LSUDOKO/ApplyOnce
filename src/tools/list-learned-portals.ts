@@ -11,6 +11,7 @@
 
 import { listCommands, checkWebcmd, type WebcmdCommand } from '../webcmd/bridge.js';
 import { log } from '../logging/logger.js';
+import { runHistory } from '../logging/ledger.js';
 
 const APPLYONCE_SITES = new Set(['internshala', 'scholarship']);
 
@@ -68,11 +69,24 @@ export async function listLearnedPortals() {
     `${portals.length} portal(s) are compiled commands; ${notLearned.length} still require exploration`,
     { learned: portals.map((p) => p.portal), not_learned: notLearned });
 
+  // Per-portal run history makes the reuse claim auditable over time.
+  const history = runHistory();
+  const runs = Object.fromEntries(
+    Object.entries(history).map(([key, entries]) => [key, {
+      total_runs: entries.length,
+      latest: entries[0] ? { steps: entries[0].steps, duration_ms: entries[0].durationMs, at: entries[0].at } : null,
+      first: entries[entries.length - 1]
+        ? { steps: entries[entries.length - 1].steps, duration_ms: entries[entries.length - 1].durationMs }
+        : null,
+    }]),
+  );
+
   return {
     ok: true as const,
     webcmd_version: version,
     learned_count: portals.length,
     portals,
+    run_history: runs,
     not_learned: notLearned.map((portal) => ({
       portal, learned: false,
       note: 'No compiled command yet — the first run on this portal must explore it (slow path).',

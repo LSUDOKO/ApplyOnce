@@ -22,6 +22,7 @@ import { resolveWithValue, type ResolvedValue } from '../mapping/field-map.js';
 import { formatDate, formatPhone, formatSkills, fitToLimit, matchSelectOption } from '../mapping/formatters.js';
 import { ApplyOnceError } from '../errors.js';
 import { log, logApprovalGate, RunTracker } from '../logging/logger.js';
+import { recordRun } from '../logging/ledger.js';
 import { assertNotSubmit, maskDeep } from '../safety.js';
 
 /** One control scraped off the live form by the adapter. */
@@ -236,6 +237,9 @@ export async function fillApplication(input: FillApplicationInput) {
   }
 
   const metrics = tracker.finish();
+  // LEARN-ONCE BEFORE/AFTER: compares this run to the first recorded run on
+  // this portal and prints the banner when a prior run exists.
+  const previousRun = recordRun('fill_application', metrics);
 
   /* ---- STEP 4: THE APPROVAL GATE — always, unconditionally ---- */
   const missingDocuments = documents.missing.map((m) => ({ document: m.key, path: m.path, reason: m.reason }));
@@ -279,6 +283,9 @@ export async function fillApplication(input: FillApplicationInput) {
       steps: metrics.steps,
       duration_ms: metrics.durationMs,
       used_compiled_command: compiled,
+      previous_run: previousRun
+        ? { steps: previousRun.steps, duration_ms: previousRun.durationMs }
+        : null,
     },
     human_approval_required: true,
     next_step: `ApplyOnce filled this application and STOPPED before submitting. Open ${result.submit_url ?? url}, review every field, then submit yourself.`,

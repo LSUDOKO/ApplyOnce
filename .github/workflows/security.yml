@@ -1,0 +1,36 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1"   # weekly, Monday 03:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: npm audit (production dependencies)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # The gate that matters: nothing that SHIPS may carry a known
+      # vulnerability. This fails the build on any moderate+ finding.
+      - name: Audit production dependencies (blocking)
+        run: npm audit --omit=dev --audit-level=moderate
+
+      # Dev-only findings are reported but do not block. Today every one of
+      # them lives inside the npm CLI that @semantic-release/npm vendors under
+      # node_modules/npm/ — a tree that overrides cannot reach and that only
+      # ever executes inside this CI runner. Tracked upstream in
+      # semantic-release; revisit when a release drops the bundled npm.
+      - name: Audit dev dependencies (report only)
+        run: npm audit --audit-level=moderate || true
