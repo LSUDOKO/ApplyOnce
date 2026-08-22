@@ -1,3 +1,9 @@
+## [1.4.1](https://github.com/LSUDOKO/ApplyOnce/compare/v1.4.0...v1.4.1) (2026-08-22)
+
+### Documentation
+
+* **README:** explain how webcmd is used in both deployments ([0c6544a](https://github.com/LSUDOKO/ApplyOnce/commit/0c6544a0c8f7754a446cac3576b5202e1ac234fb))
+
 ## [1.4.0](https://github.com/LSUDOKO/ApplyOnce/compare/v1.3.0...v1.4.0) (2026-08-22)
 
 ### Features
